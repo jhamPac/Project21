@@ -27,7 +27,7 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
     {
         super.viewDidLoad()
         
-        title = "Selfie Share"
+        title = "Instructor Name: Kevia"
         let cameraButton = UIBarButtonItem(barButtonSystemItem: .Camera, target: self, action: "importPicture")
         let addSessionButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "showConnectionPrompt")
         navigationItem.rightBarButtonItem = cameraButton
@@ -112,11 +112,77 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         dismissViewControllerAnimated(true, completion: nil)
         images.insert(newImage, atIndex: 0)
         collectionView.reloadData()
+        
+        // send update images to peers
+        
+        if mcSession.connectedPeers.count > 0
+        {
+            if let imageData = UIImagePNGRepresentation(newImage)
+            {
+                do
+                {
+                    try mcSession.sendData(imageData, toPeers: mcSession.connectedPeers, withMode: .Reliable)
+                }
+                catch let error as NSError
+                {
+                    let ac = UIAlertController(title: "Send error", message: error.localizedDescription, preferredStyle: .Alert)
+                    ac.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
+                    presentViewController(ac, animated: true, completion: nil)
+                }
+            }
+        }
     }
     
     func imagePickerControllerDidCancel(picker: UIImagePickerController)
     {
         dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    //MARK: - MCSession Protocols
+    
+    func session(session: MCSession, didReceiveStream stream: NSInputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+        
+    }
+    
+    func session(session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, withProgress progress: NSProgress) {
+        
+    }
+    
+    func session(session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, atURL localURL: NSURL, withError error: NSError?) {
+        
+    }
+    
+    func browserViewControllerDidFinish(browserViewController: MCBrowserViewController) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func browserViewControllerWasCancelled(browserViewController: MCBrowserViewController) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func session(session: MCSession, peer peerID: MCPeerID, didChangeState state: MCSessionState) {
+        switch state {
+        case MCSessionState.Connected:
+            print("Connected: \(peerID.displayName)")
+            
+        case MCSessionState.Connecting:
+            print("Connecting: \(peerID.displayName)")
+            
+        case MCSessionState.NotConnected:
+            print("Not Connected: \(peerID.displayName)")
+        }
+    }
+    
+    // receive data from host
+    func session(session: MCSession, didReceiveData data: NSData, fromPeer peerID: MCPeerID)
+    {
+        if let image = UIImage(data: data)
+        {
+            dispatch_async(dispatch_get_main_queue()) { [unowned self] in
+                self.images.insert(image, atIndex: 0)
+                self.collectionView.reloadData()
+            }
+        }
     }
 }
 
