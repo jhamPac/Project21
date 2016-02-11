@@ -27,7 +27,7 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
     {
         super.viewDidLoad()
         
-        title = "Instructor Name: Kevia"
+        title = "iConnect"
         let cameraButton = UIBarButtonItem(barButtonSystemItem: .Camera, target: self, action: "importPicture")
         let addSessionButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "showConnectionPrompt")
         navigationItem.rightBarButtonItem = cameraButton
